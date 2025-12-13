@@ -50,7 +50,7 @@ public class PdfGatewayService {
             }
 
             return pdfWebClient.post()
-                    .uri("pdf/merge")
+                    .uri("/pdf/merge")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
@@ -84,7 +84,7 @@ public class PdfGatewayService {
             builder.part("toPage",String.valueOf(endPage));
 
             return pdfWebClient.post()
-                    .uri("pdf/split")
+                    .uri("/pdf/split")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
@@ -95,3 +95,4 @@ public class PdfGatewayService {
         }
     }
 }
+
