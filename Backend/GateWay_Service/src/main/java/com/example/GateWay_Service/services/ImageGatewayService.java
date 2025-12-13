@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -21,7 +22,7 @@ public class ImageGatewayService {
     private String imageServiceBaseUrl;
 
     private void validateFile(MultipartFile file){
-         if (file.isEmpty() || file == null){
+         if (file == null || file.isEmpty()){
              throw new IllegalArgumentException("Please upload an image file");
          }
     }
@@ -59,7 +60,7 @@ public class ImageGatewayService {
         return webClient.post()
                 .uri(imageServiceBaseUrl + "/api/image/resize")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(bodyBuilder.build())
+                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
@@ -77,7 +78,7 @@ public class ImageGatewayService {
         return webClient.post()
                 .uri(imageServiceBaseUrl + "/api/image/convert")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(bodyBuilder.build())
+                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
@@ -95,7 +96,7 @@ public class ImageGatewayService {
         return webClient.post()
                 .uri(imageServiceBaseUrl + "/api/image/compress")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(bodyBuilder.build())
+                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
