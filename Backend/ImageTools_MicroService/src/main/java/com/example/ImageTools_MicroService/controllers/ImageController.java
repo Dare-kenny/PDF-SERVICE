@@ -37,11 +37,16 @@ public class ImageController {
 
         byte[] resultInBytes = imageToolServices.convertImage(file, format);
 
-        MediaType mediaType = switch (format.toLowerCase()){
-            case "png" -> MediaType.IMAGE_PNG;
-            case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
-            default -> MediaType.APPLICATION_OCTET_STREAM;
-        };
+        String normalizedFormat = format.toLowerCase()
+                .replace(".","")
+                .replace("image/","")
+                .trim();
+
+        if (normalizedFormat.equals("jpeg")){
+            normalizedFormat = "jpg";
+        }
+
+        MediaType mediaType = normalizedFormat.equals("png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
