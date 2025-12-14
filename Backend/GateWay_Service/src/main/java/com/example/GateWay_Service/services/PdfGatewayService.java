@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PdfGatewayService {
 
-    private final WebClient pdfWebClient;
+    private final @Qualifier("pdfWebClient") WebClient pdfWebClient;
 
     private boolean isPdf(MultipartFile file){
 
@@ -95,4 +95,5 @@ public class PdfGatewayService {
         }
     }
 }
+
 
