@@ -32,14 +32,16 @@ public class PdfGatewayService {
         return looksLikePdfByType || looksLikePdfByName;
     }
 
-    private ByteArrayResource asResource(MultipartFile file) throws Exception {
-        return new ByteArrayResource(file.getBytes()) {
+    private ByteArrayResource toByteArrayResource(MultipartFile file) throws Exception{
+        byte[] bytes = file.getBytes();
+        return new ByteArrayResource(bytes){
             @Override
-            public String getFilename() {
+            public String getFilename(){
                 return file.getOriginalFilename();
             }
         };
     }
+
 
     public ResponseEntity<byte[]> mergedPdfs(List<MultipartFile> files) {
 
@@ -48,6 +50,10 @@ public class PdfGatewayService {
         }
 
         for (MultipartFile file : files) {
+
+            if (files == null || files.isEmpty()){
+                throw new InvalidFileTypeExecption("One of the uploded files is empty.");
+            }
             if (!isPdf(file)) {
                 throw new InvalidFileTypeExecption("Only PDF files are allowed for merging.");
             }
@@ -57,7 +63,7 @@ public class PdfGatewayService {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
             for (MultipartFile file : files) {
-                builder.part("files", asResource(file))
+                builder.part("files", toByteArrayResource(file))
                         .filename(file.getOriginalFilename())
                         .contentType(MediaType.APPLICATION_PDF);
             }
@@ -88,7 +94,7 @@ public class PdfGatewayService {
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
-            builder.part("file", asResource(file))
+            builder.part("file", toByteArrayResource(file))
                     .filename(file.getOriginalFilename())
                     .contentType(MediaType.APPLICATION_PDF);
 
