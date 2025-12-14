@@ -11,7 +11,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/pdf")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5173")
+//@CrossOrigin(origins = "http://localhost:5173")
 public class PDFToolGatewayServiceController {
 
     private final PdfGatewayService pdfGatewayService;
@@ -29,3 +29,4 @@ public class PDFToolGatewayServiceController {
     }
 
 }
+
