@@ -1,6 +1,7 @@
 package com.example.GateWay_Service.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
@@ -103,4 +104,3 @@ public class ImageGatewayService {
     }
 
 }
-
