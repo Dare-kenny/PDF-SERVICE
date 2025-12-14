@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ImageGatewayService {
 
-    private final WebClient imageWebClient;
+    private final @Qualifier("imageWebClient") WebClient imageWebClient;
 
     private void validateFile(MultipartFile file){
          if (file == null || file.isEmpty()){
@@ -103,3 +103,4 @@ public class ImageGatewayService {
     }
 
 }
+
