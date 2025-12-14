@@ -2,6 +2,7 @@ package com.example.GateWay_Service.services;
 
 import com.example.GateWay_Service.exceptionHandling.InvalidFileTypeExecption;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -50,7 +51,7 @@ public class PdfGatewayService {
             }
 
             return pdfWebClient.post()
-                    .uri("/pdf/merge")
+                    .uri("pdf/merge")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
@@ -84,7 +85,7 @@ public class PdfGatewayService {
             builder.part("toPage",String.valueOf(endPage));
 
             return pdfWebClient.post()
-                    .uri("/pdf/split")
+                    .uri("pdf/split")
                     .contentType(MediaType.MULTIPART_FORM_DATA)
                     .body(BodyInserters.fromMultipartData(builder.build()))
                     .retrieve()
@@ -95,5 +96,3 @@ public class PdfGatewayService {
         }
     }
 }
-
-
