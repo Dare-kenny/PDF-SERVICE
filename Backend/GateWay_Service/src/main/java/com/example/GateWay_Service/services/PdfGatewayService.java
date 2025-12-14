@@ -3,6 +3,7 @@ package com.example.GateWay_Service.services;
 import com.example.GateWay_Service.exceptionHandling.InvalidFileTypeExecption;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.MultipartBodyBuilder;
@@ -19,33 +20,44 @@ public class PdfGatewayService {
 
     private final @Qualifier("pdfWebClient") WebClient pdfWebClient;
 
-    private boolean isPdf(MultipartFile file){
-
+    private boolean isPdf(MultipartFile file) {
         String contentType = file.getContentType();
         String filename = file.getOriginalFilename();
 
-        boolean LooksLikePdfByType = contentType != null && contentType.equalsIgnoreCase(MediaType.APPLICATION_PDF_VALUE);
-        boolean LooksLikePdfByName = filename != null && filename.toLowerCase().endsWith(".pdf");
+        boolean looksLikePdfByType =
+                contentType != null && contentType.equalsIgnoreCase(MediaType.APPLICATION_PDF_VALUE);
+        boolean looksLikePdfByName =
+                filename != null && filename.toLowerCase().endsWith(".pdf");
 
-        return LooksLikePdfByType || LooksLikePdfByName;
+        return looksLikePdfByType || looksLikePdfByName;
     }
 
-    public ResponseEntity<byte[]> mergedPdfs(List<MultipartFile> files){
+    private ByteArrayResource asResource(MultipartFile file) throws Exception {
+        return new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+    }
 
-        if(files == null || files.isEmpty()){
+    public ResponseEntity<byte[]> mergedPdfs(List<MultipartFile> files) {
+
+        if (files == null || files.isEmpty()) {
             throw new InvalidFileTypeExecption("Please upload at least one PDF file.");
         }
 
-        for (MultipartFile file: files){
-            if (!isPdf(file)){
+        for (MultipartFile file : files) {
+            if (!isPdf(file)) {
                 throw new InvalidFileTypeExecption("Only PDF files are allowed for merging.");
             }
         }
+
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
-            for (MultipartFile file : files){
-                builder.part("files",file.getResource())
+            for (MultipartFile file : files) {
+                builder.part("files", asResource(file))
                         .filename(file.getOriginalFilename())
                         .contentType(MediaType.APPLICATION_PDF);
             }
@@ -59,30 +71,29 @@ public class PdfGatewayService {
                     .block();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error calling pdf-service merge endpoint",e);
+            throw new RuntimeException("Error calling pdf-service merge endpoint", e);
         }
     }
 
+    public ResponseEntity<byte[]> splitPdf(MultipartFile file, int startPage, int endPage) {
 
-    public ResponseEntity<byte[]> splitPdf(MultipartFile file, int startPage, int endPage){
-
-        if(file == null || file.isEmpty()){
+        if (file == null || file.isEmpty()) {
             throw new InvalidFileTypeExecption("Please upload a PDF file to split");
         }
 
-        if (!isPdf(file)){
-                throw new InvalidFileTypeExecption("Only PDF files are allowed for splitting.");
+        if (!isPdf(file)) {
+            throw new InvalidFileTypeExecption("Only PDF files are allowed for splitting.");
         }
 
         try {
             MultipartBodyBuilder builder = new MultipartBodyBuilder();
 
-            builder.part("file", file.getResource())
+            builder.part("file", asResource(file))
                     .filename(file.getOriginalFilename())
                     .contentType(MediaType.APPLICATION_PDF);
 
             builder.part("fromPage", String.valueOf(startPage));
-            builder.part("toPage",String.valueOf(endPage));
+            builder.part("toPage", String.valueOf(endPage));
 
             return pdfWebClient.post()
                     .uri("/pdf/split")
@@ -91,8 +102,9 @@ public class PdfGatewayService {
                     .retrieve()
                     .toEntity(byte[].class)
                     .block();
+
         } catch (Exception e) {
-            throw new RuntimeException("Error calling pdf-service split endpoint",e);
+            throw new RuntimeException("Error calling pdf-service split endpoint", e);
         }
     }
 }
