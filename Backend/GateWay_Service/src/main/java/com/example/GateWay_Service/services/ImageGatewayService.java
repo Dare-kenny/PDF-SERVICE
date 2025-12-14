@@ -16,16 +16,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ImageGatewayService {
 
-    private final WebClient webClient;
-
-    @Value("${image.service.base-url}")
-    private String imageServiceBaseUrl;
+    private final WebClient imageWebClient;
 
     private void validateFile(MultipartFile file){
          if (file == null || file.isEmpty()){
              throw new IllegalArgumentException("Please upload an image file");
          }
     }
+
 
     private MultipartBodyBuilder buildMultiPartWithFile(MultipartFile file) throws Exception{
 
@@ -40,6 +38,7 @@ public class ImageGatewayService {
         };
 
         builder.part("file",resource)
+                .filename(file.getOriginalFilename())
                 .contentType(MediaType.parseMediaType(
                         file.getContentType() != null? file.getContentType(): MediaType.APPLICATION_OCTET_STREAM_VALUE
                 ));
@@ -57,10 +56,10 @@ public class ImageGatewayService {
         bodyBuilder.part("height",String.valueOf(height));
 
 
-        return webClient.post()
-                .uri(imageServiceBaseUrl + "/api/image/resize")
+        return imageWebClient.post()
+                .uri("/api/image/resize")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
@@ -75,10 +74,10 @@ public class ImageGatewayService {
         MultipartBodyBuilder bodyBuilder = buildMultiPartWithFile(file);
         bodyBuilder.part("format",format);
 
-        return webClient.post()
-                .uri(imageServiceBaseUrl + "/api/image/convert")
+        return imageWebClient.post()
+                .uri("/api/image/convert")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
@@ -93,10 +92,10 @@ public class ImageGatewayService {
 
         bodyBuilder.part("quality",String.valueOf(quality));
 
-        return webClient.post()
-                .uri(imageServiceBaseUrl + "/api/image/compress")
+        return imageWebClient.post()
+                .uri("/api/image/compress")
                 .contentType(MediaType.MULTIPART_FORM_DATA)
-                .bodyValue(BodyInserters.fromMultipartData(bodyBuilder.build()))
+                .body(BodyInserters.fromMultipartData(bodyBuilder.build()))
                 .retrieve()
                 .toEntity(byte[].class)
                 .block();
