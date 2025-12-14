@@ -8,59 +8,82 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Set;
 
 @Service
 public class ImageToolServices {
 
-    private void validateFilePresence(MultipartFile file){
-        if (file.isEmpty() || file == null){
-            throw new IllegalArgumentException("No file was uploaded or file is empty");
+    private static final Set<String> SUPPORT_FORMATS = Set.of("png","jpg","jpeg");
+
+    private BufferedImage validateAndReadImage(MultipartFile file) throws  IOException{
+        if (file == null || file.isEmpty()){
+            throw new IllegalArgumentException("No image file uploaded");
+        }
+
+        try (InputStream is = file.getInputStream()) {
+
+            BufferedImage image = ImageIO.read(is);
+
+            if (image == null){
+                throw new IllegalArgumentException("Uploaded file is not a valid image");
+            }
+
+            return image;
         }
     }
 
-    private void validateImageDimensions(int width, int height){
-
-        if (width <=0 || height<=0){
-            throw new IllegalArgumentException("Invalid Width and height values");
+    private String normalizeFormat(String format){
+        if (format == null || format.isBlank()){
+            throw new IllegalArgumentException("Target format is required");
         }
+
+        String f = format.toLowerCase().trim();
+
+        if (f.startsWith(".")){
+            f = f.substring(1);
+        }
+
+        if (f.contains("/")){
+            f = f.substring(f.indexOf("/") + 1);
+        }
+
+        if (!SUPPORT_FORMATS.contains(f)){
+            throw new IllegalArgumentException("Unsupported format "+f+" , Only PNG and JPG are allowed.");
+        }
+        return f.equals("jpeg") ? "jpg" : f;
     }
 
-    private void validateImageQuality(int quality){
 
-        if( quality < 1 || quality > 100){
-            throw new IllegalArgumentException("Quality must be between 1 and 100");
+    public byte[] resizeImage(MultipartFile file, int width, int height) throws IOException {
+
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("Width and height must be greater than zero");
         }
-    }
 
+        BufferedImage image = validateAndReadImage(file);
 
-    public byte[] resizeImage(MultipartFile file , int width, int height) throws IOException {
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Thumbnails.of(image)
+                    .size(width, height)
+                    .outputFormat("png")
+                    .toOutputStream(baos);
 
-        validateFilePresence(file);
-        validateImageDimensions(width, height);
-
-        BufferedImage resized = Thumbnails
-                .of(file.getInputStream())
-                .size(width,height)
-                .asBufferedImage();
-
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            ImageIO.write(resized, "png",baos);
             return baos.toByteArray();
         }
     }
 
+    public byte[] compressImage(MultipartFile file, int quality) throws IOException {
 
-    public byte[] compressImage(MultipartFile file, int quality ) throws IOException{
+        if (quality < 1 || quality > 100) {
+            throw new IllegalArgumentException("Quality must be between 1 and 100");
+        }
 
-        validateFilePresence(file);
-        validateImageQuality(quality);
-
+        BufferedImage image = validateAndReadImage(file);
         double q = quality / 100.0;
 
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-
-            Thumbnails
-                    .of(file.getInputStream())
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Thumbnails.of(image)
                     .scale(1.0)
                     .outputFormat("jpg")
                     .outputQuality(q)
@@ -70,21 +93,13 @@ public class ImageToolServices {
         }
     }
 
+    public byte[] convertImage(MultipartFile file, String targetFormat) throws IOException {
 
-    public byte[] convertImage(MultipartFile file, String targetFormat) throws IOException{
+        BufferedImage image = validateAndReadImage(file);
+        String format = normalizeFormat(targetFormat);
 
-        validateFilePresence(file);
-
-        if (targetFormat == null || targetFormat.isBlank()){
-            throw new IllegalArgumentException("Please enter a target format.");
-        }
-
-        String format = targetFormat.toLowerCase().trim();
-
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-
-            Thumbnails
-                    .of(file.getInputStream())
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Thumbnails.of(image)
                     .scale(1.0)
                     .outputFormat(format)
                     .toOutputStream(baos);
@@ -92,4 +107,9 @@ public class ImageToolServices {
             return baos.toByteArray();
         }
     }
+
+
+
+
+
 }
