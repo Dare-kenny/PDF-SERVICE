@@ -110,7 +110,9 @@ public class PdfGatewayService {
                     .block();
 
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Error calling pdf-service split endpoint", e);
         }
     }
 }
+
