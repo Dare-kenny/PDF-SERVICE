@@ -1,5 +1,6 @@
 package com.example.PDF_MicroService.services;
 
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.stereotype.Service;
@@ -25,7 +26,7 @@ public class PdfService {
 
             merger.setDestinationStream(outputStream); // write the final merged PDF to the in-memory stream
 
-            merger.mergeDocuments(null); // merge using default merging settings
+            merger.mergeDocuments(MemoryUsageSetting.setupMainMemoryOnly()); // merge using default merging settings
 
             return outputStream.toByteArray(); // return a byte containing full merged PDF
 
@@ -48,6 +49,7 @@ public class PdfService {
 
             PDDocument splitDoc = new PDDocument(); // new document to hold the selected page
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream() // in-memory stream
+
         ) {
             int totalPages = original.getNumberOfPages(); // get number of pages of original document for validation purposes
 
@@ -55,8 +57,8 @@ public class PdfService {
                 throw new IllegalArgumentException("Page range exceeds original document length");
             }
 
-            for (int i = startPage-1; i < endPage; i++){ // split document according to page numbers entered.
-                splitDoc.addPage(original.getPage(i));
+            for (int i = startPage-1; i <= endPage - 1; i++){ // split document according to page numbers entered.
+                splitDoc.importPage(original.getPage(i));
             }
 
             splitDoc.save(outputStream); // save the new document into in-memory stream
