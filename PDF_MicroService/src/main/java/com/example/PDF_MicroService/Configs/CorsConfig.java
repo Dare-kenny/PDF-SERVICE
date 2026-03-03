@@ -11,6 +11,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Value("$FRONTEND_ORIGIN:http://localhost:5173}")
     private String frontendOrigin;
 
+    @Override
     public void addCorsMappings(CorsRegistry registry){
         registry.addMapping("/**")
                 .allowedOrigins(frontendOrigin)
@@ -19,5 +20,6 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedHeaders("*");
     }
 }
+
 
 
